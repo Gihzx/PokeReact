@@ -17,10 +17,9 @@ function DetalhesPokemon() {
 
    }, [id])
 
-
-   if(!pokemon){
-      return <h2>Carregando...</h2>
-   }
+    if (!pokemon) {
+    return <Loading />
+    }
 
 
    return(
