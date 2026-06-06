@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-
+import Loading from "../components/Loading"
 import { buscarPokemon } from "../services/buscarPokemons"
 
 function DetalhesPokemon() {
@@ -17,10 +17,9 @@ function DetalhesPokemon() {
 
    }, [id])
 
-
-   if(!pokemon){
-      return <h2>Carregando...</h2>
-   }
+    if (!pokemon) {
+    return <Loading />
+    }
 
 
    return(

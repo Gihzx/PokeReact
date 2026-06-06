@@ -1,54 +1,199 @@
 import { useEffect, useState } from "react";
-import { BuscarPokemons } from "../services/BuscarPokemons";
-import { Link } from "react-router-dom"
-function Home (){
-const [pokeAll, setPokeAll] = useState([])
-const [offset, setOffset] = useState(0)
+import {
+  BuscarPokemons,
+  buscarTipos,
+  buscarPokemonPorTipo
+} from "../services/BuscarPokemons";
+import fundo from '../assets/cute-mouse-playing-surfing-with-friends-background-free-vector.jpg'
+import { Cards } from "../components/Cards";
+import FilterType from "../components/FilterType";
+import SearchPokemon from "../components/SearchPokemon";
+import Loading from "../components/Loading";  
 
+function Home() {
 
+  const [pokeAll, setPokeAll] = useState([]);
+  const [offset, setOffset] = useState(0);
+  const [tipos, setTipos] = useState([]);
+  const [tipoSelecionado, setTipoSelecionado] = useState("");
+  const [busca, setBusca] = useState("");
+  const [pokemonSelecionado, setPokemonSelecionado] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
 
-useEffect(() => {
- 
-   BuscarPokemons(offset).then((dados) => {
-    setPokeAll(dados)
-  })
+  // Buscar pokémons da página atual
+  useEffect(() => {
 
-}, [offset])
+    setLoading(true);
 
-function proximaPagina(){
-  setOffset(offset + 20)
-}
-function paginaAnterior(){
-  if(offset > 0){
-    setOffset(offset - 20)
-  }else{
-    console.log("Não é possível voltar para a página anterior")
+    BuscarPokemons(offset)
+      .then((dados) => {
+        setErro("");
+        setPokeAll(dados);
+      })
+      .catch(() => {
+        setErro("Erro ao carregar Pokémon");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+  }, [offset]);
+
+  // Buscar tipos
+  useEffect(() => {
+
+    buscarTipos()
+      .then((dados) => {
+        setTipos(dados);
+      });
+
+  }, []);
+
+  function proximaPagina() {
+    setOffset((valorAtual) => valorAtual + 20);
   }
-}
-  return (
-    <>
-      {pokeAll.map((pokemon) => (
-    <Link
-        key={pokemon.id}
-        to={`pokemon/${pokemon.id}`}
-    >
-        <div>
-        #{pokemon.id} - {pokemon.name}
 
-        <img
-            src={pokemon.sprites.front_default}
-            alt={pokemon.name}
-        />
+  function paginaAnterior() {
+
+    if (offset > 0) {
+      setOffset((valorAtual) => valorAtual - 20);
+    }
+
+  }
+
+  async function filtrarTipo(tipo) {
+
+    setTipoSelecionado(tipo);
+
+    try {
+
+      setLoading(true);
+
+      if (tipo === "") {
+
+        const dados = await BuscarPokemons(offset);
+
+        setErro("");
+        setPokeAll(dados);
+
+        return;
+      }
+
+      const dados = await buscarPokemonPorTipo(tipo);
+
+      setErro("");
+      setPokeAll(dados);
+
+    } catch {
+
+      setErro("Erro ao carregar Pokémon");
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  // Busca por nome (client-side)
+  const pokemonsFiltrados = pokeAll.filter((pokemon) =>
+    pokemon.name
+      .toLowerCase()
+      .includes(busca.toLowerCase())
+  );
+
+ return (
+  <div className="relative min-h-screen overflow-hidden">
+
+    {/* Background */}
+    <div
+      className="
+        absolute
+        inset-0
+        bg-cover
+        bg-center
+        bg-no-repeat
+        scale-110
+        blur-sm
+        opacity-80
+      "
+      style={{ backgroundImage: `url(${fundo})` }}
+    />
+
+    {/* Overlay */}
+    <div className="absolute inset-0 bg-black/10" />
+
+    {/* Conteúdo */}
+    <div className="relative z-10 max-w-7xl mx-auto p-6">
+
+      {erro && (
+        <p className="mb-4 text-red-500">
+          {erro}
+        </p>
+      )}
+
+      {loading && <Loading />}
+
+      <SearchPokemon
+        busca={busca}
+        onBuscar={setBusca}
+      />
+
+      <FilterType
+        tipos={tipos}
+        tipoSelecionado={tipoSelecionado}
+        onSelecionarTipo={filtrarTipo}
+      />
+
+      {tipoSelecionado && (
+        <p className="my-4">
+          Total de Pokémon do tipo {tipoSelecionado}: {pokeAll.length}
+        </p>
+      )}
+
+      <div
+        className="
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          lg:grid-cols-4
+          gap-6
+          mt-6
+        "
+      >
+        {pokemonsFiltrados.map((pokemon) => (
+        <Cards
+                key={pokemon.id}
+                pokemon={pokemon}
+                onClick={() => setPokemonSelecionado(pokemon)}
+              />
+        ))}
+      </div>
+
+      {tipoSelecionado === "" && (
+        <div className="flex justify-center gap-4 mt-8">
+          <button
+            onClick={paginaAnterior}
+            className="px-4 py-2 rounded bg-white shadow"
+          >
+            Anterior
+          </button>
+
+          <button
+            onClick={proximaPagina}
+            className="px-4 py-2 rounded bg-white shadow"
+          >
+            Próxima
+          </button>
         </div>
-    </Link>
-      ))}
+      )}
 
-      <button onClick={paginaAnterior}>Anterior</button>
-      <button onClick={proximaPagina}>Próxima</button>
-    </>
-    )
+    </div>
+  </div>
+  
+);
 }
-
-
 
 export default Home;
