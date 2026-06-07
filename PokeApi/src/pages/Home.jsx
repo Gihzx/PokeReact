@@ -49,6 +49,9 @@ function Home() {
       });
 
   }, []);
+  useEffect(() => {
+  console.log("Pokemon selecionado:", pokemonSelecionado);
+}, [pokemonSelecionado]);
 
   function proximaPagina() {
     setOffset((valorAtual) => valorAtual + 20);
@@ -189,7 +192,26 @@ function Home() {
           </button>
         </div>
       )}
+{pokemonSelecionado && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
 
+    <div className="bg-white rounded-xl p-6 w-[400px]">
+
+      <button
+        onClick={() => setPokemonSelecionado(null)}
+        className="float-right"
+      >
+        ✕
+      </button>
+
+      <h2 className="text-2xl font-bold">
+        {pokemonSelecionado.name}
+      </h2>
+
+    </div>
+
+  </div>
+)}
     </div>
   </div>
   
