@@ -9,6 +9,8 @@ import { Cards } from "../components/Cards";
 import FilterType from "../components/FilterType";
 import SearchPokemon from "../components/SearchPokemon";
 import Loading from "../components/Loading";  
+import { buscarPokemon } from "../services/buscarPokemons";
+import ModalPokemon from "../components/ModalPokemon";
 
 function Home() {
 
@@ -49,6 +51,9 @@ function Home() {
       });
 
   }, []);
+  useEffect(() => {
+  console.log("Pokemon selecionado:", pokemonSelecionado);
+}, [pokemonSelecionado]);
 
   function proximaPagina() {
     setOffset((valorAtual) => valorAtual + 20);
@@ -96,6 +101,27 @@ function Home() {
     }
 
   }
+  async function abrirModal(id) {
+
+  try {
+
+    setLoading(true);
+
+    const dados = await buscarPokemon(id);
+
+    setPokemonSelecionado(dados);
+
+  } catch {
+
+    setErro("Erro ao carregar detalhes do Pokémon");
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+}
 
   // Busca por nome (client-side)
   const pokemonsFiltrados = pokeAll.filter((pokemon) =>
@@ -164,11 +190,11 @@ function Home() {
         "
       >
         {pokemonsFiltrados.map((pokemon) => (
-        <Cards
-                key={pokemon.id}
-                pokemon={pokemon}
-                onClick={() => setPokemonSelecionado(pokemon)}
-              />
+          <Cards
+              key={pokemon.id}
+              pokemon={pokemon}
+              onClick={() => abrirModal(pokemon.id)}
+            />
         ))}
       </div>
 
@@ -189,7 +215,12 @@ function Home() {
           </button>
         </div>
       )}
-
+      {pokemonSelecionado && (
+          <ModalPokemon
+        pokemon={pokemonSelecionado}
+        onClose={() => setPokemonSelecionado(null)}
+      />
+      )}
     </div>
   </div>
   
